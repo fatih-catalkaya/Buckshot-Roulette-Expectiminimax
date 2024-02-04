@@ -14,15 +14,33 @@ GameState GameState::NewStateAfterShootAction(Action action, BulletType bulletTy
     // a given action and a given bullet type, which would be shot
     int newTotalBullets = totalBullets - 1;
     int newLiveBullets = liveBullets - (bulletType == LIVE ? 1 : 0);
+
+    // Recompute, how many times a player was shot
     int newNumPlayerShot;
     int newNumDaemonShot;
+    if (bulletType == BLANK) {
+        // If the bullet is a blank, the scores do not change
+        newNumPlayerShot = numPlayerShot;
+        newNumDaemonShot = numDaemonShot;
+    } else if (action == SHOOT_SELF) {
+        // The bullet is a live one. Therefore, we have to increase the shot counter
+        // depending on who is currently acting
+        newNumPlayerShot = numPlayerShot + (playerToAct == PLAYER ? 1 : 0);
+        newNumDaemonShot = numDaemonShot + (playerToAct == DAEMON ? 1 : 0);
+    } else {
+        // The bullet is a live one and the opposite player was shot.
+        // We have to increase the counter accordingly
+        newNumPlayerShot = numPlayerShot + (playerToAct == DAEMON ? 1 : 0);
+        newNumDaemonShot = numDaemonShot + (playerToAct == PLAYER ? 1 : 0);
+    }
+
     TurnEnum newPlayerToAct;
     if (action == SHOOT_SELF && bulletType == BLANK) {
         newPlayerToAct = playerToAct;
     } else {
         newPlayerToAct = playerToAct == PLAYER ? DAEMON : PLAYER;
     }
-    return GameState(newPlayerToAct, newTotalBullets, newLiveBullets, numPlayerShot, numDaemonShot);
+    return GameState(newPlayerToAct, newTotalBullets, newLiveBullets, newNumPlayerShot, newNumDaemonShot);
 }
 
 std::pair<Action, double> GameState::ComputeBestAction() const {
@@ -99,7 +117,7 @@ std::unordered_map<Action, double> GameState::ExpectedValues() const {
 
         // We compute the expected value, of the current action and add it to our map
         expectedValuesGivenAction[action] =
-                probLiveBullet * liveBulletBestAction.second + (1 - probLiveBullet) * blankBulletBestAction.second;
+                probLiveBullet * liveBulletBestAction.second + (1.0 - probLiveBullet) * blankBulletBestAction.second;
     }
 
     return expectedValuesGivenAction;
