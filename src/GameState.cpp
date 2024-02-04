@@ -1,5 +1,4 @@
 #include "GameState.hpp"
-#include <algorithm>
 #include <limits>
 
 GameState::GameState(TurnEnum playerToAct, int totalBullets, int liveBullets, int numPlayerShot, int numDaemonShot)
@@ -90,14 +89,8 @@ std::unordered_map<Action, double> GameState::ExpectedValues() const {
         // the utility value
         bool liveLeft = liveBullets == 1;
 
-        switch (playerToAct) {
-            case PLAYER:
-                return std::unordered_map<Action, double>{{SHOOT_SELF,  (numDaemonShot - (numPlayerShot + liveLeft))},
-                                                          {SHOOT_OTHER, (numDaemonShot + liveLeft - numPlayerShot)}};
-            case DAEMON:
-                return std::unordered_map<Action, double>{{SHOOT_SELF,  (numPlayerShot - (numDaemonShot + liveLeft))},
-                                                          {SHOOT_OTHER, (numPlayerShot + liveLeft - numDaemonShot)}};
-        }
+        return std::unordered_map<Action, double>{{SHOOT_SELF,  (numDaemonShot - (numPlayerShot + liveLeft))},
+                                                  {SHOOT_OTHER, (numDaemonShot + liveLeft - numPlayerShot)}};
     }
 
     const std::vector<Action> availableActions = ComputeAvailableActions();
